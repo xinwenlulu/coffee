@@ -1,5 +1,87 @@
 #include "RoastyModel.hpp"
 
+/* Bean */
+
+Bean::Bean(std::string name): name(name) {}
+
+std::string Bean::getName() const { return name; }
+
+Bean& Bean::operator=(std::string const& name) {
+    this->name = name;
+    return *this;
+}
+
+Bean::Bean(Bean const& b){
+    name = b.getName();
+}
+
+Bean& Bean::operator=(Bean const& b){
+    this->name = b.getName();
+    return *this;
+}
+
+Bean::~Bean(){}
+
+/* Ingredient */
+Ingredient::Ingredient(Bean& bean, int amount): bean(bean),amount(amount){}
+
+int Ingredient::getAmount() const { return amount; }
+
+Bean const& Ingredient::getBean() const { return bean; }
+
+Ingredient::~Ingredient(){}
+
+
+/* EventValue */
+long EventValue::getValue() const { return value; }
+
+EventValue& EventValue::operator=(long const& v) {
+    this->value = v;
+    return *this;
+}
+
+EventValue::EventValue(EventValue& ev){
+    value = ev.getValue();
+}
+
+EventValue::~EventValue(){}
+
+
+/* Event */
+Event::Event(std::string type, long timestamp, EventValue* eventValue): type(type), eventTimestamp(timestamp), eventValue(eventValue) {}
+
+Event::Event(std::string type, long timestamp): type(type), eventTimestamp(timestamp) {}
+
+std::string Event::getType() const { return type; }
+
+long Event::getTimestamp() const { return eventTimestamp; }
+
+bool Event::hasValue() const {
+    if (eventValue != nullptr){
+        return true;
+    } else {
+        return false;
+    }
+}
+        
+EventValue* Event::getValue() const {
+    if (hasValue()) {
+        return eventValue;
+    } else {
+        return nullptr;
+    }
+}
+
+Event::Event(Event const& e){
+    type = e.getType();
+    eventTimestamp = e.getTimestamp();
+    eventValue = e.getValue();
+}
+
+Event::~Event(){}
+
+
+/* Roast */
 Roast::Roast(long id, long timestamp): id(id), timestamp(timestamp){}
 
 long Roast::getId() const { return id;}
@@ -17,7 +99,7 @@ Ingredient const& Roast::getIngredient(int index) const {
         iterator = iterator->next;
     }
     std::cerr<<"The "<<index<<"th ingredient not found: check your index"<<std::endl;
-    return iterator->ingredient;
+    exit(0);
 }
 
 Event const& Roast::getEvent(int index) const {
@@ -31,7 +113,7 @@ Event const& Roast::getEvent(int index) const {
         iterator = iterator->next;
     }
     std::cerr<<"The "<<index<<"th event not found: check your index" << std::endl;
-    return iterator->event;
+    exit(0);
 }
 
 void Roast::addIngredient(Ingredient const& ingredient){
@@ -98,31 +180,9 @@ void Roast::removeEventByTimestamp(long timestamp){
 
 int Roast::getEventCount() const { return eventCount; }
 
-Roast::~Roast() {
-    //if (ingredients != nullptr) {
-      //  IngredientsList* iterator = ingredients;
-        //while (iterator->next != nullptr){
-          //  auto x = iterator->ingredient;
-            //auto beanName = x.getBean().getName();
-            //removeIngredientByBeanName(beanName);
-            //delete x;
-            //iterator = iterator->next;
-        //}
-        //delete ingredients;
-    //}
-    
-    //if (events != nullptr) {
-        //EventsList* iterator = events;
-        //while (iterator->next != nullptr){
-            //auto x = iterator->event;
-            //auto timestamp = x.getTimestamp();
-            //removeEventByTimestamp(timestamp);
-            //delete x;
-            //iterator = iterator->next;
-        //}
-        //delete events;
-    //}
-}
+IngredientsList* Roast::getIngredientsList() const{ return ingredients; }
+
+EventsList* Roast::getEventList() const { return events; }
 
 Roast::Roast(Roast const& r){
     id = r.getId();
@@ -134,72 +194,25 @@ Roast::Roast(Roast const& r){
     events = r.getEventList();
 }
 
-IngredientsList* Roast::getIngredientsList() const{ return ingredients; }
-
-EventsList* Roast::getEventList() const { return events; }
-
-Ingredient::Ingredient(Bean& bean, int amount): bean(bean),amount(amount){}
-
-int Ingredient::getAmount() const { return amount; }
-
-Bean const& Ingredient::getBean() const { return bean; }
-
-Bean::Bean(std::string name): name(name) {}
-
-std::string Bean::getName() const { return name; }
-
-Bean& Bean::operator=(std::string const& name) {
-    this->name = name;
-    return *this;
+Roast::~Roast() {
+    //if (ingredients != nullptr) {
+        //while (ingredients->next != nullptr){
+          //  auto x = &ingredients->ingredient;
+            //auto beanName = x->getBean().getName();
+            //removeIngredientByBeanName(beanName);
+            //delete x;
+        //}
+        //delete ingredients;
+    //}
+    
+    //if (events != nullptr) {
+        //while (events->next != nullptr){
+            //auto x = &events->event;
+            //auto timestamp = x->getTimestamp();
+            //removeEventByTimestamp(timestamp);
+           // delete x;
+            
+        //}
+        //delete events;
+    //}
 }
-
-Bean::Bean(Bean const& b){
-    name = b.getName();
-}
-
-Bean& Bean::operator=(Bean const& b){
-    this->name = b.getName();
-    return *this;
-}
-
-long EventValue::getValue() const { return value; }
-
-EventValue& EventValue::operator=(long const& v) {
-    this->value = v;
-    return *this;
-}
-
-Event::Event(std::string type, long timestamp, EventValue* eventValue): type(type), eventTimestamp(timestamp), eventValue(eventValue) {}
-
-Event::Event(std::string type, long timestamp): type(type), eventTimestamp(timestamp) {}
-
-std::string Event::getType() const { return type; }
-
-long Event::getTimestamp() const { return eventTimestamp; }
-
-bool Event::hasValue() const {
-    if (eventValue != nullptr){
-        return true;
-    } else {
-        return false;
-    }
-}
-        
-EventValue* Event::getValue() const {
-    if (hasValue()) {
-        return eventValue;
-    } else {
-        return nullptr;
-    }
-}
-
-EventValue::EventValue(EventValue& ev){
-    value = ev.getValue();
-}
-
-Event::Event(Event const& e){
-    type = e.getType();
-    eventTimestamp = e.getTimestamp();
-    eventValue = e.getValue();
-}
-

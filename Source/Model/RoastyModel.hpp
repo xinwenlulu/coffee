@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 
+/* Ingredient Section */
 class Bean {
     std::string name;
 public:
@@ -10,6 +11,7 @@ public:
     Bean& operator=(std::string const& name);
     Bean(Bean const& b);
     Bean& operator=(Bean const& b);
+    ~Bean();
 };
 
 class Ingredient {
@@ -17,11 +19,20 @@ class Ingredient {
     int amount;
 public:
     Ingredient(Bean& bean, int amount);
-    Ingredient(Ingredient const& i): bean(*new Bean(i.bean)) {};
+    //Ingredient(Ingredient const& i): bean(*new Bean(i.bean)) {};
     int getAmount() const;
     Bean const& getBean() const;
+    ~Ingredient();
 };
 
+struct IngredientsList {
+    Ingredient const& ingredient;
+    IngredientsList* next = nullptr;
+    IngredientsList(Ingredient const& ingredient):ingredient(ingredient){};
+    //IngredientsList(IngredientsList const& il): ingredient(*new Ingredient const(il.ingredient)) {};
+};
+
+/* Event Section */
 class EventValue {
     long value;
 public:
@@ -29,6 +40,7 @@ public:
     long getValue() const;
     EventValue& operator=(long const& v);
     EventValue(EventValue& ev);
+    ~EventValue();
 };
 
 class Event {
@@ -43,22 +55,18 @@ public:
     bool hasValue() const;
     EventValue* getValue() const;
     Event(Event const& e);
+    ~Event();
 };
 
-struct IngredientsList {
-    Ingredient const& ingredient;
-    IngredientsList* next = nullptr;
-    IngredientsList(Ingredient const& ingredient):ingredient(ingredient){};
-    IngredientsList(IngredientsList const& il): ingredient(*new Ingredient const(il.ingredient)) {};
-};
 
 struct EventsList {
     Event const& event;
     EventsList* next = nullptr;
     EventsList(Event const& event): event(event){};
-    EventsList(EventsList const& el): event(*new Event const(el.event)) {};
+    //EventsList(EventsList const& el): event(*new Event const(el.event)) {};
 };
 
+/* Roast Section */
 class Roast {
     long id;
     long timestamp;
@@ -81,8 +89,8 @@ public:
     /* roast assumes ownership of event*/
     void removeEventByTimestamp(long timestamp);
     int getEventCount() const;
-    ~Roast();
-    Roast(Roast const& r);
     IngredientsList* getIngredientsList() const;
     EventsList* getEventList() const;
+    Roast(Roast const& r);
+    ~Roast();
 };
