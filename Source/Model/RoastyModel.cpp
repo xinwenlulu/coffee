@@ -1,103 +1,231 @@
 #include "RoastyModel.hpp"
+#include <iostream>
+
+using namespace std;
 
 /* Bean */
-Bean::Bean(std::string name): name(name) {}
-
-Bean::Bean( Bean const& b){ name = b.getName(); }
-
-Bean& Bean::operator=(Bean const& b){
-    this->name = b.getName();
-    return *this;
-}
+Bean::Bean(std::string name){ this->name = name; }
 
 std::string Bean::getName() const { return name; }
 
-Bean::~Bean(){}
-
-
 /* Ingredient */
-Ingredient::Ingredient(Bean& bean, int amount): bean(bean),amount(amount){}
+Ingredient::Ingredient(Bean& bean, int amount): bean(bean) {
+    this->amount = amount;
+}
 
 int Ingredient::getAmount() const { return amount; }
 
 Bean const& Ingredient::getBean() const { return bean; }
 
-Ingredient::~Ingredient(){}
-
+Ingredient::~Ingredient(){ delete &bean; }
 
 /* EventValue */
 long EventValue::getValue() const { return value; }
-
-EventValue::EventValue(EventValue& ev){ value = ev.getValue(); }
-
-EventValue& EventValue::operator=(long const& v) {
-    this->value = v;
-    return *this;
-}
-
-EventValue::~EventValue(){}
-
 
 /* Event */
 Event::Event(std::string type, long timestamp, EventValue* eventValue): type(type), eventTimestamp(timestamp), eventValue(eventValue) {}
 
 Event::Event(std::string type, long timestamp): type(type), eventTimestamp(timestamp) {}
 
+// copy constructor
 Event::Event(Event const& e){
-    type = e.getType();
-    eventTimestamp = e.getTimestamp();
-    eventValue = e.getValue();
+    delete this->eventValue;
+    this->type = e.getType();
+    this->eventTimestamp = e.getTimestamp();
+    if (e.hasValue()) {
+        this->eventValue = new EventValue(e.getValue()->getValue());
+    }
 }
+
+//copy assignment
+Event& Event::operator=(Event const& e){
+    delete this->eventValue;
+    this->type = e.getType();
+    this->eventTimestamp = e.getTimestamp();
+    if (e.hasValue()) {
+        this->eventValue = new EventValue(e.getValue()->getValue());
+    }
+    return *this;
+}
+
 
 std::string Event::getType() const { return type; }
 
 long Event::getTimestamp() const { return eventTimestamp; }
 
-bool Event::hasValue() const {
-    if (eventValue != nullptr){
-        return true;
-    } else {
-        return false;
-    }
-}
+bool Event::hasValue() const { return (eventValue != nullptr); }
         
-EventValue* Event::getValue() const {
-    if (hasValue()) {
-        return eventValue;
-    } else {
-        //ask for a nonexistent value
-        std::cerr << "This event does not contain any value" << std::endl;
-        exit(0);
+EventValue* Event::getValue() const { return eventValue; }
+
+Event::~Event(){
+    if (this->hasValue()) {
+        delete eventValue;
     }
 }
-
-Event::~Event(){}
 
 
 /* Roast */
 Roast::Roast(long id, long timestamp): id(id), timestamp(timestamp){}
 
+// copy constructor
 Roast::Roast(Roast const& r){
-    id = r.getId();
-    timestamp = r.getTimestamp();
-    ingredientsCount = r.getIngredientsCount();
-    eventCount = r.getEventCount();
     
-    ingredients = r.getIngredientsList();
-    events = r.getEventList();
+    //deallocate original memory
+    auto tmp = this->ingredients;
+        
+    while (tmp != nullptr) {
+        auto x = &(tmp->ingredient);
+        delete x;
+        auto next = tmp->next;
+        delete tmp;
+        tmp = next;
+    }
+    
+    auto tmp2 = this->events;
+    
+    while (tmp2 != nullptr) {
+        auto x = &(tmp2->event);
+        delete x;
+        auto next = tmp2->next;
+        delete tmp2;
+        tmp2 = next;
+    }
+    
+    // copy attributes
+    this->id = r.getId();
+    this->timestamp = r.getTimestamp();
+    
+    // make deep copies
+    if (r.ingredients == nullptr) {
+        this->ingredients = nullptr;
+    }else{
+        auto x = r.ingredients;
+        this->ingredients = new IngredientsList(*(new Ingredient(*(new Bean(x->ingredient.getBean().getName())), x->ingredient.getAmount())));
+        
+        auto tmp = this->ingredients;
+        x = x->next;
+        while (x != nullptr) {
+            tmp->next = new IngredientsList(*(new Ingredient(*(new Bean(x->ingredient.getBean().getName())), x->ingredient.getAmount())));
+            x = x->next;
+            tmp = tmp->next;
+        }
+    }
+    
+    if (r.events == nullptr) {
+        this->events = nullptr;
+    }else{
+        auto x = r.events;
+        if (x->event.hasValue()) {
+            this->events = new EventsList(*(new Event(x->event.getType(), x->event.getTimestamp(), new EventValue(x->event.getValue()->getValue()))));
+        } else {
+            this->events = new EventsList(*(new Event(x->event.getType(), x->event.getTimestamp())));
+        }
+        
+        auto tmp = this->events;
+        x = x->next;
+        while (x != nullptr) {
+            if (x->event.hasValue()) {
+                tmp->next = new EventsList(*(new Event(x->event.getType(), x->event.getTimestamp(), new EventValue(x->event.getValue()->getValue()))));
+            } else {
+                tmp->next = new EventsList(*(new Event(x->event.getType(), x->event.getTimestamp())));
+            }
+            x = x->next;
+            tmp = tmp->next;
+        }
+    }
+}
+
+// copy assignment
+Roast& Roast::operator=(Roast const& r){
+    //deallocate original memory
+    auto tmp = this->ingredients;
+        
+    while (tmp != nullptr) {
+        auto x = &(tmp->ingredient);
+        delete x;
+        auto next = tmp->next;
+        delete tmp;
+        tmp = next;
+    }
+    
+    auto tmp2 = this->events;
+        
+    while (tmp2 != nullptr) {
+        auto x = &(tmp2->event);
+        delete x;
+        auto next = tmp2->next;
+        delete tmp2;
+        tmp2 = next;
+    }
+    
+    // copy attributes
+    this->id = r.getId();
+    this->timestamp = r.getTimestamp();
+    
+    // make deep copies
+    if (r.ingredients == nullptr) {
+        this->ingredients = nullptr;
+    }else{
+        auto x = r.ingredients;
+        this->ingredients = new IngredientsList(*(new Ingredient(*(new Bean(x->ingredient.getBean().getName())), x->ingredient.getAmount())));
+        auto tmp = this->ingredients;
+        x = x->next;
+        while (x != nullptr) {
+            tmp->next = new IngredientsList(*(new Ingredient(*(new Bean(x->ingredient.getBean().getName())), x->ingredient.getAmount())));
+            x = x->next;
+            tmp = tmp->next;
+        }
+    }
+    
+    if (r.events == nullptr) {
+        this->events = nullptr;
+    }else{
+        auto x = r.events;
+        if (x->event.hasValue()) {
+            this->events = new EventsList(*(new Event(x->event.getType(), x->event.getTimestamp(), new EventValue(x->event.getValue()->getValue()))));
+        } else {
+            this->events = new EventsList(*(new Event(x->event.getType(), x->event.getTimestamp())));
+        }
+        
+        auto tmp = this->events;
+        x = x->next;
+        while (x != nullptr) {
+            if (x->event.hasValue()) {
+                tmp->next = new EventsList(*(new Event(x->event.getType(), x->event.getTimestamp(), new EventValue(x->event.getValue()->getValue()))));
+            } else {
+                tmp->next = new EventsList(*(new Event(x->event.getType(), x->event.getTimestamp())));
+            }
+            x = x->next;
+            tmp = tmp->next;
+        }
+    }
+    
+    return *this;
 }
 
 long Roast::getId() const { return id;}
 
 long Roast::getTimestamp() const { return timestamp; }
 
-int Roast::getIngredientsCount() const { return ingredientsCount; }
+int Roast::getIngredientsCount() const {
+    IngredientsList* iterator = ingredients;
+    int count = 0;
+    while (iterator != nullptr) {
+        iterator = iterator->next;
+        count++;
+    }
+    return count;
+}
 
-int Roast::getEventCount() const { return eventCount; }
-
-IngredientsList* Roast::getIngredientsList() const{ return ingredients; }
-
-EventsList* Roast::getEventList() const { return events; }
+int Roast::getEventCount() const {
+    EventsList* iterator = events;
+    int count = 0;
+    while (iterator != nullptr) {
+        iterator = iterator->next;
+        count++;
+    }
+    return count;
+}
 
 Ingredient const& Roast::getIngredient(int index) const {
     IngredientsList* iterator = ingredients;
@@ -112,8 +240,8 @@ Ingredient const& Roast::getIngredient(int index) const {
         iterator = iterator->next;
     }
     //index exceeds the number of ingredients in IngredientsList
-    std::cerr<<"The "<<index<<"th ingredient does not exist"<<std::endl;
-    //exit(0);
+    cerr<<"The "<<index<<"th ingredient does not exist"<<std::endl;
+    exit(0);
 }
 
 Event const& Roast::getEvent(int index) const {
@@ -129,8 +257,8 @@ Event const& Roast::getEvent(int index) const {
         iterator = iterator->next;
     }
     //index exceeds the number of events in EventsList
-    std::cerr<<"The "<<index<<"th event does not exist" << std::endl;
-    //exit(0);
+    cerr<<"The "<<index<<"th event does not exist" << std::endl;
+    exit(0);
 }
 
 void Roast::addIngredient(Ingredient const& ingredient){
@@ -144,7 +272,6 @@ void Roast::addIngredient(Ingredient const& ingredient){
         } //add ingredient at the first nullptr
         iterator->next = new IngredientsList(ingredient);
     }
-    ingredientsCount++; //update count regardless
 }
 
 void Roast::removeIngredientByBeanName(std::string const& beanName){
@@ -157,13 +284,14 @@ void Roast::removeIngredientByBeanName(std::string const& beanName){
                 auto old = (*iterator);
                 //point to the next ingredient
                 (*iterator) = (*iterator)->next;
-                delete old; //deleter this ingredient
+                
+                //free the ingredient
+                delete &(old->ingredient);
+                //free the ingredientsList
+                delete old;
                 return;
             }
             iterator = &((*iterator)->next); //check next ingredient
-        }
-        if (getIngredientsCount()>0){
-            ingredientsCount--; //update count only if removed
         }
     }
 }
@@ -180,50 +308,44 @@ void Roast::addEvent(Event const& event){
         // add event at the first nullptr
         iterator->next = new EventsList(event);
     }
-    eventCount++; //update count regardless
 }
 
 void Roast::removeEventByTimestamp(long timestamp){
     if (events != nullptr){//don't remove from empty list
         EventsList** iterator = &events;
         //loop until find the target event to be deleted
-        while((*iterator)->next != nullptr){
+        while((*iterator) != nullptr){
             if ((*iterator)->event.getTimestamp() == timestamp){
                 //assign a new pointer to that event
                 auto old = (*iterator);
                 //point to the next event
                 (*iterator) = (*iterator)->next;
-                delete old; //deleter this event
+                //free the event
+                delete &(old->event);
+                //free the eventsList
+                delete old;
                 return;
             }
             iterator = &((*iterator)->next); //check next event
-        }
-        if (getEventCount()>0){
-            eventCount--; //update count only if removed
         }
     }
 }
 
 //won't compile (ಥ﹏ಥ)
 Roast::~Roast() {
-    //if (ingredients != nullptr) {
-        //while (ingredients->next != nullptr){
-          //  auto x = &ingredients->ingredient;
-            //auto beanName = x->getBean().getName();
-            //removeIngredientByBeanName(beanName);
-            //delete x;
-        //}
-        //delete ingredients;
-    //}
     
-    //if (events != nullptr) {
-        //while (events->next != nullptr){
-            //auto x = &events->event;
-            //auto timestamp = x->getTimestamp();
-            //removeEventByTimestamp(timestamp);
-           // delete x;
-            
-        //}
-        //delete events;
-    //}
+    //deallocate
+    while (ingredients != nullptr) {
+        auto tmp = ingredients->next;
+        delete &(ingredients->ingredient);
+        delete ingredients;
+        ingredients = tmp;
+    }
+    
+    while (events != nullptr) {
+        auto tmp = events->next;
+        delete &(events->event);
+        delete events;
+        events = tmp;
+    }
 }

@@ -1,21 +1,5 @@
 #pragma once
-#include <iostream>
 #include <string>
-
-/*
- I've commented out 3 test section for it to pass all the remaining tests:
-        All tests passed (47 assertions in 6 test cases)
- The 3 sections I commented out was:
-    "Replacing an event in a roast works"
-        roasty.replaceEventInRoast(1235, 123459, newE);
-    "Deleting a blend from a roast works"
-        roasty.removeIngredientFromRoast(1112, "Java");
-    "Updating a blend from a roast works"
-        roasty.updateIngredient(1113, "Java", 500);
- It seems that it attempts to search for the 0th ingredient when the list is empty
- I couldn't fix it (ಥ﹏ಥ)
- */
-
 
 /* Ingredient Section */
 class Bean {
@@ -23,16 +7,9 @@ class Bean {
 public:
     //constructors
     Bean(std::string name);
-    Bean(Bean const& b);
-    
-    //copy assignment
-    Bean& operator=(Bean const& b);
     
     //get the state of bean
     std::string getName() const;
-    
-    //destructor
-    ~Bean();
 };
 
 class Ingredient {
@@ -61,15 +38,10 @@ class EventValue {
 public:
     //constructor
     EventValue (long value): value(value){};
-    EventValue(EventValue& ev);
-    //copy assignment
-    EventValue& operator=(long const& v);
     
     //get the state of EventValue
     long getValue() const;
     
-    //destructor
-    ~EventValue();
 };
 
 class Event {
@@ -81,6 +53,8 @@ public:
     Event(std::string type, long timestamp, EventValue* eventValue);
     Event(std::string type, long timestamp);
     Event(Event const& e);
+    //copy assignment
+    Event& operator=(Event const& e);
     
     //get the state of the event
     std::string getType() const;
@@ -102,8 +76,6 @@ struct EventsList { // a linked list for all events added//
 class Roast {
     long id;
     long timestamp;
-    int ingredientsCount = 0;
-    int eventCount = 0;
     IngredientsList* ingredients = nullptr;
     EventsList* events = nullptr;
     
@@ -111,14 +83,15 @@ public:
     //constructors
     Roast(long id, long timestamp);
     Roast(Roast const& r);
+    //copy assignment
+    Roast& operator=(Roast const& r);
     
     //getting the state of the roast
     long getId() const;
     long getTimestamp() const;
+    
     int getIngredientsCount() const;
     int getEventCount() const;
-    IngredientsList* getIngredientsList() const;
-    EventsList* getEventList() const;
     
     //get ingredient and event from its index in list
     Ingredient const& getIngredient(int index) const;
@@ -136,5 +109,5 @@ public:
     void removeEventByTimestamp(long timestamp);
     /* deletes the removed Event*/
     
-    ~Roast(); //destructor
+    ~Roast(); //deconstructor
 };
