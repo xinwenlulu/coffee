@@ -72,7 +72,7 @@ Roast::Roast(Roast const& r){
     
     //deallocate original memory
     auto tmp = this->ingredients;
-        
+
     while (tmp != nullptr) {
         auto x = &(tmp->ingredient);
         delete x;
@@ -80,9 +80,9 @@ Roast::Roast(Roast const& r){
         delete tmp;
         tmp = next;
     }
-    
+
     auto tmp2 = this->events;
-    
+
     while (tmp2 != nullptr) {
         auto x = &(tmp2->event);
         delete x;
@@ -96,7 +96,7 @@ Roast::Roast(Roast const& r){
     this->timestamp = r.getTimestamp();
     
     // make deep copies
-    if (r.ingredients == nullptr) {
+    if (r.ingredients == NULL) {
         this->ingredients = nullptr;
     }else{
         auto x = r.ingredients;
@@ -111,7 +111,7 @@ Roast::Roast(Roast const& r){
         }
     }
     
-    if (r.events == nullptr) {
+    if (r.events == NULL) {
         this->events = nullptr;
     }else{
         auto x = r.events;
@@ -163,7 +163,7 @@ Roast& Roast::operator=(Roast const& r){
     this->timestamp = r.getTimestamp();
     
     // make deep copies
-    if (r.ingredients == nullptr) {
+    if (r.ingredients == NULL) {
         this->ingredients = nullptr;
     }else{
         auto x = r.ingredients;
@@ -177,7 +177,7 @@ Roast& Roast::operator=(Roast const& r){
         }
     }
     
-    if (r.events == nullptr) {
+    if (r.events == NULL) {
         this->events = nullptr;
     }else{
         auto x = r.events;
